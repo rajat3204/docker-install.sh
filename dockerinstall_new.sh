@@ -69,7 +69,7 @@ echo -ne 'Progress =============>            (66%)\r'
 sleep 0.3
 echo -ne "Progress ========================> (100%)\r"
 echo -ne '\n'
-sudo curl -L "https://github.com/docker/compose/releases/download/1.25.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose 
+sudo curl -sL "https://github.com/docker/compose/releases/download/1.25.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose 
 sudo chmod +x /usr/local/bin/docker-compose &> /dev/null
 sleep 0.3
 echo -e "\n $(tput setaf 1) $(tput bold)DOCKER & DOCKER-COMPOSE Installed Successfuly!!!$(tput sgr0) $(tput sgr 0)\n"
