@@ -78,4 +78,4 @@ echo -e "\n $(tput setaf 1) $(tput bold)DOCKER & DOCKER-COMPOSE Installed Succes
 #sudo su ubuntu
 sudo su $(whoami)
 sudo docker -v
-sudo docker compose --verison
+sudo docker compose --version
