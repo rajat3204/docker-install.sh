@@ -55,6 +55,7 @@ sudo add-apt-repository -y \
 sudo apt-get update -y &> /dev/null
 sudo apt-get install docker-ce docker-ce-cli containerd.io -y &> /dev/null
 sudo usermod -aG docker $(whoami)
+sudo newgrp docker
 
 echo -ne "Progress ========================> (100%)\r"
 echo -ne '\n'
