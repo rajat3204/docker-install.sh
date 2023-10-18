@@ -56,7 +56,7 @@ sudo apt-get update -y &> /dev/null
 sudo apt-get install docker-ce docker-ce-cli containerd.io -y &> /dev/null
 sudo groupadd docker
 sudo usermod -aG docker $USER
-sudo newgrp docker
+newgrp docker
 
 echo -ne "Progress ========================> (100%)\r"
 echo -ne '\n'
