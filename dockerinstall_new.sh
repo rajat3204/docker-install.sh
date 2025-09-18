@@ -1,83 +1,58 @@
-#/bin/bash
+#!/bin/bash
 
-echo -e " $(tput setaf 1) $(tput bold)Removing Old Docker$(tput sgr0) $(tput sgr 0) \n"
-sleep 0.3
+set -euo pipefail
 
+# Progress bar function
+progress_bar() {
+    echo -ne "Progress ====>                     (33%)\r"
+    sleep 0.3
+    echo -ne "Progress =============>            (66%)\r"
+    sleep 0.3
+    echo -ne "Progress ========================> (100%)\r"
+    echo -ne '\n'
+}
 
-echo -ne 'Progress ====>                     (33%)\r'
-sleep 0.3
-echo -ne 'Progress =============>            (66%)\r'
-sleep 0.3
-echo -ne "Progress ========================> (100%)\r"
-echo -ne '\n'
+echo -e "\n$(tput setaf 1)$(tput bold)Removing Old Docker$(tput sgr0)\n"
+sudo apt-get purge -y docker-ce docker-ce-cli docker-compose-plugin containerd.io || true
+sudo apt-get autoremove -y
+progress_bar
 
-sudo apt-get purge docker-ce docker-ce-cli -y &> /dev/null
-echo -e "\n $(tput setaf 1) $(tput bold)Removing Old Docker-Compose$(tput sgr0) $(tput sgr 0)\n"
+echo -e "\n$(tput setaf 1)$(tput bold)Removing Old Docker-Compose$(tput sgr0)\n"
+if command -v docker-compose &> /dev/null; then
+    sudo rm -f "$(which docker-compose)"
+    echo "Old docker-compose binary removed."
+fi
+progress_bar
 
-echo -ne 'Progress ====>                     (33%)\r'
-sleep 0.3
-echo -ne 'Progress =============>            (66%)\r'
-sleep 0.3
-echo -ne "Progress ========================> (100%)\r"
-echo -ne '\n'
+echo -e "\n$(tput setaf 1)$(tput bold)Installing Latest Docker & Docker-Compose$(tput sgr0)\n"
 
-sudo rm -rf $(which docker-compose)
+# Update packages
+sudo apt-get update -qq
+sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
 
-echo -e "\n $(tput setaf 1) $(tput bold)Removing Docker-compse binaries...$(tput sgr0) $(tput sgr 0) \n"
-echo -ne 'Progress ====>                     (33%)\r'
-sleep 0.3
-echo -ne 'Progress =============>            (66%)\r'
-sleep 0.3
-echo -ne "Progress ========================> (100%)\r"
-echo -ne '\n'
+# Add Docker GPG key
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+    sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-echo -ne '\n'
-echo -e "\n $(tput setaf 1) $(tput bold)Installing Docker-CE $(tput sgr0) $(tput sgr 0)\n"
-sleep 0.3
-echo -e "\n $(tput setaf 1) $(tput bold)Updating Linux packages $(tput sgr0) $(tput sgr 0)\n"
+# Add Docker repo
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-echo -ne 'Progress ====>                     (33%)\r'
-sleep 0.3
-echo -ne 'Progress =============>            (66%)\r'
-sleep 0.3
-sudo apt-get update -y &> /dev/null
-sudo apt-get install  \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg-agent \
-    software-properties-common -y &> /dev/null
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &> /dev/null
-sudo add-apt-repository -y \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable" &> /dev/null
-sudo apt-get update -y &> /dev/null
-sudo apt-get install docker-ce docker-ce-cli containerd.io -y &> /dev/null
-sudo groupadd docker
-sudo usermod -aG docker $USER
-newgrp docker
+# Install Docker Engine, CLI, Compose plugin, and Buildx
+sudo apt-get update -qq
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-echo -ne "Progress ========================> (100%)\r"
-echo -ne '\n'
-#sudo su ubuntu
-echo -e "\n $(tput setaf 1) $(tput bold)DOCKER-CE INSTALLED !!!$(tput sgr0) $(tput sgr 0) \n"
-sleep 0.3
-echo -e "\n $(tput setaf 1) $(tput bold)Installing Docker-Compose...$(tput sgr0) $(tput sgr 0)\n "
+# Add user to docker group
+sudo groupadd docker 2>/dev/null || true
+sudo usermod -aG docker "$USER"
 
-echo -ne 'Progress ====>                     (33%)\r'
-sleep 0.3
-echo -ne 'Progress =============>            (66%)\r'
-sleep 0.3
-echo -ne "Progress ========================> (100%)\r"
-echo -ne '\n'
-#OLD METHOD
-#sudo curl -sL "https://github.com/docker/compose/releases/download/1.25.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose 
-#sudo chmod +x /usr/local/bin/docker-compose &> /dev/null
-sudo apt-get install docker-compose-plugin -y &> /dev/null
-sleep 0.3
-echo -e "\n $(tput setaf 1) $(tput bold)DOCKER & DOCKER-COMPOSE Installed Successfuly!!!$(tput sgr0) $(tput sgr 0)\n"
-#sudo su ubuntu
-sudo su $(whoami)
-sudo docker -v
-sudo docker compose version
+progress_bar
+echo -e "\n$(tput setaf 2)$(tput bold)DOCKER & DOCKER-COMPOSE Installed Successfully!!!$(tput sgr0)\n"
+echo "👉 Please log out & log back in (or run 'exec su - $USER') to use Docker without sudo."
+
+# Verify installation
+docker --version
+docker compose version
